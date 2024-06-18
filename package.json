@@ -1,0 +1,28 @@
+{
+  "name": "authorized-actor-github-action",
+  "version": "1.0.0",
+  "description": "Allow a github action to fail, if the user or bot that triggered the github action, it not authorized to call it. Can be an alternative to using rulesets, for small teams with private repos, that do not want to pay for an organization plan",
+  "main": "action.yml",
+  "scripts": {
+    "dev": "npx ts-node scripts/runScript.ts",
+    "build": "npx ts-node scripts/buildScript.ts"
+  },
+  "keywords": [
+    "Authorize",
+    "Actor",
+    "Permission",
+    "Github",
+    "Action"
+  ],
+  "author": "Arky Asmal",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.11"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "octokit": "^3.1.2",
+    "zod": "^3.23.8"
+  }
+}
