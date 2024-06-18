@@ -1,5 +1,5 @@
-name: "authorised-actor"
-description: "Execute a GitHub Action only if the (triggering) actor is authorised to do so."
+name: "Authorized Github User"
+description: "Execute steps in a GitHub Action only if the (triggering) actor is authorized to do so."
 author: "Arky Asmal"
 runs:
   using: "node20"
