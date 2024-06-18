@@ -16,7 +16,7 @@ This action provides potential solutions for these cases. By detecting the Githu
 
 ```yaml
 name: Authorized Actor
-uses: aasmal97/AuthorizedActor@v1.0.0
+uses: aasmal97/AuthorizedGithubUser@v1.0.0
 with:
   authorizedActors:  ${{secrets.AUTHORIZED_ACTORS}}
 ```
