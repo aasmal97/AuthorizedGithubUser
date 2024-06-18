@@ -1,5 +1,5 @@
 name: "Test Workflow"
-on: 
+on:
   push:
     branches:
       - master
@@ -9,16 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: "Test HashiCorp Vault Secrets ALL_SECRETS"
+      - name: "Test Authorized Actors Org Management"
         uses: ./
-        with: 
-          CLIENT_ID: ${{secrets.CLIENT_ID}}
-          CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
-          APP_NAME: ${{secrets.APP_NAME}}
-          PROJECT_NAME: ${{secrets.PROJECT_NAME}}
-          ORGANIZATION_NAME: ${{secrets.ORGANIZATION_NAME}}
-          GENERATE_ENV: test
-          ALL_SECRETS: true 
-      - name: "Test if env is present"
-        shell: bash
-        run: ls
+        with:
+          authorizedGroups: ${{secrets.AUTHORIZED_GROUPS}}
+          githubToken: ${{github.token}}
+          githubOrg: ${{secrets.GITHUB_ORG}}

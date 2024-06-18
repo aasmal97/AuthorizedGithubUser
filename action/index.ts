@@ -1,62 +1,36 @@
 import * as core from "@actions/core";
-import { z } from "zod";
-import { GroupValues, InputValues } from "./types";
-const InputZodSchema = z.object({
-  token: z
-    .string()
-    .optional()
-    .transform((val) => val || process.env.GITHUB_TOKEN),
-  actor: z
-    .string()
-    .optional()
-    .transform((val) => val || process.env.GITHUB_ACTOR || ""),
-  authorizedGroups: z
-    .string()
-    .optional()
-    .or(z.array(z.nativeEnum(GroupValues)))
-    .transform((val) => {
-      if (typeof val === "string") {
-        try {
-          const parsed = JSON.parse(val);
-          return parsed;
-        } catch (error) {
-          return [val];
-        }
-      }
-      return val;
-    })
-    .refine((val) => {
-      if (!val) return val;
-      return Array.isArray(val);
-    }),
-  authorizedActors: z
-    .string()
-    .optional()
-    .or(z.array(z.string()))
-    .transform((val) => {
-      if (typeof val === "string") {
-        try {
-          const parsed = JSON.parse(val);
-          return parsed;
-        } catch (error) {
-          return [val];
-        }
-      }
-      return val;
-    })
-    .refine((val) => {
-      if (!val) return val;
-      return Array.isArray(val);
-    }),
-  failSilently: z.boolean().default(false),
-  failureMessage: z
-    .string()
-    .default("Actor is not authorised to trigger this Workflow."),
-});
-const getInput = (): InputValues => {
+import { InputZodSchema } from "./types";
+import { Octokit } from "@octokit/rest";
+
+async function getMembers(org: string, token: string) {
+  const octokit = new Octokit({
+    auth: token,
+  });
+  const membersList = await octokit.orgs.listMembers({
+    org,
+  });
+  const memberData: Promise<{
+    login: string;
+    role: string;
+  }>[] = membersList.data.map(async (member: any) => {
+    const membership = await octokit.orgs.getMembershipForUser({
+      org,
+      username: member.login,
+    });
+    return {
+      login: member.login as string,
+      role: membership.data.role as string,
+    };
+  });
+  return Promise.all(memberData);
+}
+const getInput = () => {
   const results = {
+    githubToken: core.getInput("githubToken"),
+    githubOrg: core.getInput("githubOrg"),
     actor: core.getInput("actor"),
-    authorizedActors: core.getInput("authorizedActors", { required: true }),
+    authorizedGroups: core.getInput("authorizedGroups"),
+    authorizedActors: core.getInput("authorizedActors"),
     failSilently: core.getInput("failSilently") === "true" || false,
     failureMessage:
       core.getInput("failureMessage") ||
@@ -77,8 +51,9 @@ async function run(): Promise<void> {
 
   try {
     core.debug(`Reading input ...`);
-
     const {
+      githubOrg,
+      githubToken,
       actor,
       authorizedActors,
       failSilently,
@@ -88,11 +63,21 @@ async function run(): Promise<void> {
 
     core.debug(`Got actor: ${actor}`);
     core.debug(`Got a list of authorised actors ${authorizedActors}`);
+    core.debug(`Got a list of authorised groups ${authorizedGroups}`);
+    core.debug(`Got a token ${githubToken}`);
+    core.debug(`Got an org ${githubOrg}`);
     const newAuthorizedActors = authorizedActors || [];
-
+    //handle access by organization
+    if (authorizedGroups && githubToken && githubOrg) {
+      const members = await getMembers(githubOrg, githubToken);
+      const users = members
+        .filter((m) => authorizedGroups.includes(m.role))
+        .map((m) => m.login);
+      newAuthorizedActors.push(...users);
+    }
     const isAuthorisedActor = newAuthorizedActors.includes(actor);
-    core.setOutput("isAuthorisedActor", isAuthorisedActor);
 
+    core.setOutput("isAuthorisedActor", isAuthorisedActor);
     core.debug(`isAuthorisedActor: ${isAuthorisedActor ? "Yes" : "No"}.`);
     core.debug(`Fail silently? ${failSilently ? "Yes" : "No"}!`);
 

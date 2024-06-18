@@ -11,14 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: "Test Authorized Actors"
         uses: ./
-        with: 
-          CLIENT_ID: ${{secrets.CLIENT_ID}}
-          CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
-          APP_NAME: ${{secrets.APP_NAME}}
-          PROJECT_NAME: ${{secrets.PROJECT_NAME}}
-          SECRET_NAMES: ${{secrets.SECRET_NAMES}}
-          ORGANIZATION_NAME: ${{secrets.ORGANIZATION_NAME}}
-          GENERATE_ENV: test
-      - name: "Test if env is present"
-        shell: bash
-        run: ls
+        with:
+          authorizedActors:  ${{secrets.AUTHORIZED_ACTORS}}
